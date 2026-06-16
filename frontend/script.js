@@ -1,18 +1,12 @@
-alert("SCRIPT LOADED");
-
 async function loadData() {
 
     try {
 
         const latestResponse =
-        await fetch("http://13.217.137.172:8000/latest");
-
-        alert("LATEST STATUS = " + latestResponse.status);
+        await fetch("http://localhost:8000/latest");
 
         const telemetry =
         await latestResponse.json();
-
-        alert("BATTERY = " + telemetry.battery_voltage);
 
         document.getElementById("battery").innerText =
         telemetry.battery_voltage;
@@ -27,9 +21,7 @@ async function loadData() {
         telemetry.signal_strength;
 
         const anomalyResponse =
-        await fetch("http://13.217.137.172:8000/anomalies");
-
-        alert("ANOMALY STATUS = " + anomalyResponse.status);
+        await fetch("http://localhost:8000/anomalies");
 
         const stats =
         await anomalyResponse.json();
@@ -43,9 +35,11 @@ async function loadData() {
     }
     catch(error) {
 
-        alert("ERROR = " + error);
+        console.log(error);
 
     }
 }
 
 loadData();
+
+setInterval(loadData, 2000);
