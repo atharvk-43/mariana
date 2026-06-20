@@ -8,17 +8,20 @@ async function loadData() {
         const telemetry =
         await latestResponse.json();
 
-        document.getElementById("battery").innerText =
-        telemetry.battery_voltage;
+        document.getElementById("node").innerText =
+telemetry.node_id;
 
-        document.getElementById("temperature").innerText =
-        telemetry.temperature;
+document.getElementById("cpu").innerText =
+telemetry.cpu_load_pct;
 
-        document.getElementById("cpu").innerText =
-        telemetry.cpu_load;
+document.getElementById("memory").innerText =
+telemetry.memory_used_pct;
 
-        document.getElementById("signal").innerText =
-        telemetry.signal_strength;
+document.getElementById("latency").innerText =
+telemetry.latency_ms;
+
+document.getElementById("loss").innerText =
+telemetry.packet_loss_pct;
 
         const anomalyResponse =
         await fetch("http://localhost:8000/anomalies");

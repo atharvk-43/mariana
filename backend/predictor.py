@@ -5,10 +5,15 @@ df = pd.read_csv("telemetry.csv")
 
 features = df[
     [
-        "battery_voltage",
-        "temperature",
-        "cpu_load",
-        "signal_strength"
+        "cpu_load_pct",
+        "memory_used_pct",
+        "utilization_pct",
+        "latency_ms",
+        "jitter_ms",
+        "packet_loss_pct",
+        "bgp_sessions_active",
+        "bgp_updates_per_min",
+        "queue_depth"
     ]
 ]
 
@@ -26,6 +31,4 @@ df.to_csv(
     index=False
 )
 
-print(
-    df["anomaly"].value_counts()
-)
+print(df["anomaly"].value_counts())
