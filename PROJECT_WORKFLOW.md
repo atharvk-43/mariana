@@ -1,240 +1,18 @@
-# MARTIAN PS13 - Project Workflow and Development Guide
-
-## Project Objective
-
-Build a telemetry monitoring and anomaly detection platform inspired by spacecraft mission-control systems.
-
-The system should:
-
-* Ingest telemetry data
-* Detect anomalies
-* Predict failures before they occur
-* Display telemetry and alerts through a dashboard
-* Run locally without requiring AWS
-
----
-
-## Current Architecture
-
-Frontend
-
-* index.html
-* style.css
-* script.js
-
-Backend
-
-* main.py
-* telemetry.py
-* predictor.py
-* stream.py
-
-Data
-
-* telemetry.csv
-* live_telemetry.csv
-
-Deployment
-
-* FastAPI
-* Gunicorn
-* AWS EC2
-
----
-
-## Working APIs
-
-GET /health
-
-Returns:
-
-{
-"healthy": true
-}
-
-GET /latest
-
-Returns latest telemetry row.
-
-GET /anomalies
-
-Returns:
-
-{
-"total_records": X,
-"anomalies_detected": Y
-}
-
----
-
-## Current Telemetry Fields
-
-* battery_voltage
-* temperature
-* cpu_load
-* signal_strength
-
----
-
-## ML Team Responsibilities
-
-Primary file:
-
-predictor.py
-
-Additional files allowed:
-
-* model.py
-* train.py
-* inference.py
-* evaluation.py
-
-Avoid modifying:
-
-* frontend/
-* main.py
-
-unless required.
-
----
-
-## ML Goals
-
-### Goal 1
-
-Improve anomaly detection.
-
-Current model:
-
-Isolation Forest
-
-Desired output:
-
-{
-"anomaly": true,
-"risk_score": 87
-}
-
----
-
-### Goal 2
-
-Health Classification
-
-States:
-
-* NORMAL
-* WARNING
-* CRITICAL
-
-Example:
-
-Battery = NORMAL
-
-Temperature = WARNING
-
-Signal = CRITICAL
-
----
-
-### Goal 3
-
-Failure Prediction
-
-Examples:
-
-* Battery degradation
-* Signal degradation
-* Thermal overload
-* CPU overload
-
-Desired output:
-
-{
-"predicted_failure_hours": 4.2,
-"risk_level": "HIGH"
-}
-
----
-
-## Running Locally
-
-Clone repository:
-
-git clone https://github.com/atharvk-43/mariana.git
-
-Create environment:
-
-Windows:
-
-python -m venv venv
-
-venv\Scripts\activate
-
-Linux:
-
-python3 -m venv venv
-
-source venv/bin/activate
-
-Install:
-
-pip install -r backend/requirements.txt
-
-Backend:
-
-cd backend
-
-python main.py
-
-Frontend:
-
-Serve frontend folder and open:
-
-http://localhost:5500
-
----
-
-## Data Assumptions
-
-Battery Voltage:
-
-24V - 30V
-
-Temperature:
-
--20°C to 40°C
-
-CPU Load:
-
-0% - 100%
-
-Signal Strength:
-
-40 - 100
-
----
-
-## Project Philosophy
-
-The system should answer:
-
-1. What is happening?
-2. Is it abnormal?
-3. Why is it abnormal?
-4. What happens next?
-5. How urgent is the issue?
-
-Every ML contribution should move the project toward answering these questions.
-# MARTIAN PS13 - Developer Handover & Project Workflow
+# MARTIAN PS13 - Developer Handover & Workflow
 
 ## Project Overview
 
-MARTIAN PS13 is a telemetry monitoring and anomaly detection platform inspired by spacecraft mission-control systems.
+MARTIAN PS13 is a Network Telemetry Monitoring and Anomaly Detection Platform.
 
-The goal is to monitor telemetry data, identify abnormal behavior, predict potential failures, and present the information through a dashboard.
+The objective is to:
 
-The project is intentionally designed so that development can continue completely locally without requiring AWS or EC2.
+* Collect network telemetry
+* Detect anomalies
+* Estimate operational risk
+* Predict future failures
+* Visualize network health through a dashboard
+
+The project uses synthetic network telemetry to simulate real network devices and monitoring systems.
 
 ---
 
@@ -242,202 +20,168 @@ The project is intentionally designed so that development can continue completel
 
 ## Completed
 
-### Backend
+### Data Generation
 
-* FastAPI backend created
-* API endpoints implemented
-* Telemetry ingestion implemented
-* CSV-based telemetry storage implemented
-* Live telemetry endpoint implemented
-* Anomaly endpoint implemented
+* Synthetic network telemetry generator implemented
+* Historical telemetry dataset generation implemented
+* Live telemetry stream implemented
 
-### Data
-
-* telemetry.csv generated
-* live_telemetry.csv generated
-
-### ML Baseline
+### Machine Learning
 
 * Isolation Forest anomaly detection implemented
-* Initial anomaly labeling working
+* Anomaly labeling pipeline operational
+
+### Backend
+
+* FastAPI backend implemented
+* REST API endpoints operational
+* Telemetry serving operational
 
 ### Frontend
 
-* Dashboard created
-* Live telemetry display implemented
-* Anomaly statistics display implemented
+* Dashboard implemented
+* Live telemetry display operational
+* Anomaly statistics display operational
 
 ### Infrastructure
 
 * GitHub repository configured
 * Local development workflow established
-* EC2 deployment tested successfully
+* AWS testing completed
+* Project no longer depends on EC2
 
 ---
 
-# Current Repository Structure
+# Current Telemetry Schema
 
-```text
+Historical telemetry:
+
+backend/telemetry.csv
+
+Live telemetry:
+
+backend/live_telemetry.csv
+
+Fields:
+
+* timestamp
+* node_id
+* cpu_load_pct
+* memory_used_pct
+* utilization_pct
+* latency_ms
+* jitter_ms
+* packet_loss_pct
+* bgp_sessions_active
+* bgp_updates_per_min
+* queue_depth
+
+---
+
+# Current ML Pipeline
+
+telemetry.py
+
+↓
+
+telemetry.csv
+
+↓
+
+predictor.py
+
+↓
+
+Isolation Forest
+
+↓
+
+anomaly column
+
+↓
+
+FastAPI API
+
+↓
+
+Dashboard
+
+---
+
+# Repository Structure
+
 mariana/
 
 backend/
-├── main.py
-├── telemetry.py
-├── predictor.py
-├── stream.py
-├── telemetry.csv
-├── live_telemetry.csv
-├── requirements.txt
+
+* main.py
+* telemetry.py
+* predictor.py
+* stream.py
+* telemetry.csv
+* live_telemetry.csv
+* requirements.txt
 
 frontend/
-├── index.html
-├── style.css
-├── script.js
+
+* index.html
+* style.css
+* script.js
 
 README.md
+
 PROJECT_WORKFLOW.md
-```
 
 ---
 
 # API Endpoints
 
-## GET /
+GET /
 
-Returns service status.
+Returns project status.
 
-Example:
-
-```json
-{
-  "project": "MARTIAN PS13",
-  "status": "running"
-}
-```
-
----
-
-## GET /health
+GET /health
 
 Returns health status.
 
-Example:
+GET /latest
 
-```json
-{
-  "healthy": true
-}
-```
+Returns latest live telemetry row.
 
----
-
-## GET /latest
-
-Returns latest telemetry record from:
-
-live_telemetry.csv
-
----
-
-## GET /anomalies
+GET /anomalies
 
 Returns:
 
-```json
-{
-  "total_records": 1000,
-  "anomalies_detected": 50
-}
-```
+* total_records
+* anomalies_detected
 
 ---
 
-# Telemetry Fields
+# Running Locally
 
-Current telemetry contains:
+Clone repository:
 
-## battery_voltage
-
-Expected range:
-
-24V - 30V
-
----
-
-## temperature
-
-Expected range:
-
--20°C to 40°C
-
----
-
-## cpu_load
-
-Expected range:
-
-0% - 100%
-
----
-
-## signal_strength
-
-Expected range:
-
-40 - 100
-
----
-
-# Local Development Setup
-
-Clone:
-
-```bash
 git clone https://github.com/atharvk-43/mariana.git
-```
 
 Enter project:
 
-```bash
 cd mariana
-```
-
-Create environment:
-
-Windows:
-
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-Linux:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
 
 Install dependencies:
 
-```bash
 pip install -r backend/requirements.txt
-```
 
 ---
 
 # Running Backend
 
-```bash
 cd backend
+
 uvicorn main:app --reload
-```
 
 Backend URL:
 
-```text
 http://localhost:8000
-```
 
 ---
 
@@ -445,154 +189,125 @@ http://localhost:8000
 
 Open another terminal:
 
-```bash
 cd frontend
+
 python -m http.server 5500
-```
 
 Frontend URL:
 
-```text
 http://localhost:5500
-```
 
 Important:
 
-The frontend expects the backend to be available at:
+Frontend expects backend at:
 
-```text
 http://localhost:8000
-```
 
-No AWS or EC2 instance is required.
+No AWS infrastructure is required.
 
 ---
 
 # ML Development Scope
 
-Primary file:
-
-```text
-backend/predictor.py
-```
-
-Additional files that may be added:
-
-```text
-backend/model.py
-backend/train.py
-backend/inference.py
-backend/evaluation.py
-```
-
----
-
-# Files To Avoid Modifying
-
-Avoid modifying unless necessary:
-
-```text
-frontend/
-backend/main.py
-```
-
-These components are currently working.
-
----
-
-# ML Objectives
-
-## Objective 1
-
-Improve anomaly detection quality.
-
-Current implementation:
+Current model:
 
 Isolation Forest
 
-Potential improvements:
+File:
 
-* Hyperparameter tuning
-* Feature engineering
-* Better anomaly scoring
-
-Desired output:
-
-```json
-{
-  "anomaly": true,
-  "risk_score": 87
-}
-```
+backend/predictor.py
 
 ---
 
-## Objective 2
+# Recommended Next Steps
+
+## Phase 1
+
+Risk Scoring
+
+Example:
+
+{
+"risk_score": 82
+}
+
+---
+
+## Phase 2
 
 Health Classification
 
-Introduce states:
+Possible statuses:
 
 * NORMAL
 * WARNING
 * CRITICAL
 
-Example:
-
-```json
-{
-  "battery_status": "NORMAL",
-  "temperature_status": "WARNING",
-  "signal_status": "CRITICAL"
-}
-```
-
 ---
 
-## Objective 3
+## Phase 3
 
 Failure Prediction
 
-Predict future system failures.
+Predict:
 
-Examples:
+* Congestion
+* Packet loss spikes
+* BGP instability
+* Resource exhaustion
 
-* Battery degradation
-* Signal degradation
-* Thermal overload
-* CPU overload
+---
 
-Desired output:
+## Phase 4
 
-```json
-{
-  "predicted_failure_hours": 4.2,
-  "risk_level": "HIGH"
-}
-```
+Dashboard Improvements
+
+Add:
+
+* Latency graphs
+* Packet loss graphs
+* CPU utilization graphs
+* Health indicators
+* Risk score cards
+
+---
+
+# Files Safe To Modify
+
+* predictor.py
+* telemetry.py
+* stream.py
+
+---
+
+# Files To Modify Carefully
+
+* main.py
+* frontend/index.html
+* frontend/script.js
+
+These are currently working.
 
 ---
 
 # Design Philosophy
 
-This project should answer:
+The platform should answer:
 
 1. What is happening?
 2. Is it abnormal?
-3. Why is it abnormal?
-4. What will happen next?
-5. How urgent is the issue?
-
-The ML component should move the system toward answering all five questions.
+3. How severe is it?
+4. What may happen next?
+5. What action should be taken?
 
 ---
 
-# Important Note
+# Current State
 
-AWS EC2 was used only for deployment testing.
+The project is fully portable.
 
-The project is now fully portable.
+No EC2 dependency exists.
 
-All required code, datasets, and dependencies are available in GitHub.
+All code, datasets, and dependencies are available in GitHub.
 
-Development should continue locally unless deployment testing is required.
+A new developer should be able to clone the repository and continue development locally.
