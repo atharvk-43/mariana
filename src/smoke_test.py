@@ -15,9 +15,9 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from datetime import datetime, timedelta
-from data.topology import NODES, get_adjacency_matrix, get_lsps_through_node, get_node_interfaces
-from data.network_gen import NetworkTelemetryGenerator, TELEMETRY_SCHEMA, ALL_IFACES, ALL_TUNNELS
-from data.anomaly_injector import AnomalyInjector
+from .data.topology import NODES, get_adjacency_matrix, get_lsps_through_node, get_node_interfaces
+from .data.network_gen import NetworkTelemetryGenerator, TELEMETRY_SCHEMA, ALL_IFACES, ALL_TUNNELS
+from .data.anomaly_injector import AnomalyInjector
 
 print("=" * 60)
 print("SMOKE TEST V2 — MPLS Data Layer (Per-Interface)")

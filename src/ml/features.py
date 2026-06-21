@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from data.network_gen import NUMERIC_COLS
-from data.topology import NODES, NODE_INDEX
+from ..data.network_gen import NUMERIC_COLS
+from ..data.topology import NODES, NODE_INDEX
 
 ROLLING_WINDOWS_SEC = [30, 300, 3600]
 

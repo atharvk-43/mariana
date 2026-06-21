@@ -1,8 +1,8 @@
-from ml.features import build_feature_matrix, get_feature_vector_for_if, get_sequence_for_lstm, get_graph_features, normalize_features
-from ml.isolation_forest import IsolationForestDetector
-from ml.lstm_ae import LSTMAutoencoder, LSTMAnomalyDetector
-from ml.gat_model import GATAutoencoder, GATAnomalyDetector
-from ml.ensemble import EnsembleDetector
+from .features import build_feature_matrix, get_feature_vector_for_if, get_sequence_for_lstm, get_graph_features, normalize_features
+from .isolation_forest import IsolationForestDetector
+from .lstm_ae import LSTMAutoencoder, LSTMAnomalyDetector
+from .gat_model import GATAutoencoder, GATAnomalyDetector
+from .ensemble import EnsembleDetector
 
 try:
     from ml.prophet_model import ProphetForecaster, PROPHET_METRICS

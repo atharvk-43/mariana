@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 import joblib
 
-from ml.features import get_feature_vector_for_if, normalize_features
+from .features import get_feature_vector_for_if, normalize_features
 
 
 class IsolationForestDetector:

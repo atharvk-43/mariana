@@ -37,9 +37,9 @@ from tqdm import tqdm
 # Make sure project root is on path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from data.topology import NODES, NODE_IDS, get_adjacency_matrix, NODE_INDEX
-from data.network_gen import NetworkTelemetryGenerator, NUMERIC_COLS
-from data.anomaly_injector import AnomalyInjector, FAULT_TYPES, ELIGIBLE_PRIMARY
+from ..data.topology import NODES, NODE_IDS, get_adjacency_matrix, NODE_INDEX
+from ..data.network_gen import NetworkTelemetryGenerator, NUMERIC_COLS
+from ..data.anomaly_injector import AnomalyInjector, FAULT_TYPES, ELIGIBLE_PRIMARY
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -187,7 +187,7 @@ def _build_snapshot(generator: NetworkTelemetryGenerator, t: datetime) -> dict:
     node_labels: (10,) binary — 1 if anomalous, 0 if normal
     edge_index: COO from topology (static, same every snapshot)
     """
-    from data.topology import get_edge_index_coo
+    from ..data.topology import get_edge_index_coo
     states = generator.get_all_states()
 
     node_features = np.zeros((len(NODE_IDS), 20), dtype=np.float32)
@@ -213,40 +213,61 @@ def _build_snapshot(generator: NetworkTelemetryGenerator, t: datetime) -> dict:
 
 def _state_to_feature_row(s) -> list[float]:
     """Extract NUMERIC_COLS features from NodeState using per-interface aggregates."""
+
     ifaces = list(s.interfaces.values())
 
     if ifaces:
         total_bytes_in = sum(
-            iface.util * iface.capacity_mbps * 1e6 / 8 * 2 * 0.6
+            (iface.util_pct / 100.0) * iface.capacity_mbps * 1e6 / 8 * 2 * 0.6
             for iface in ifaces
         )
+
         total_bytes_out = sum(
-            iface.util * iface.capacity_mbps * 1e6 / 8 * 2 * 0.4
+            (iface.util_pct / 100.0) * iface.capacity_mbps * 1e6 / 8 * 2 * 0.4
             for iface in ifaces
         )
-        errors   = sum(iface.errors_in for iface in ifaces)
+
+        errors = sum(iface.errors_in for iface in ifaces)
+
         drops_in = sum(iface.drops_in for iface in ifaces)
-        drops_out= sum(iface.drops_out for iface in ifaces)
-        util     = max(iface.util * 100.0 for iface in ifaces)
-        queue    = max(iface.queue for iface in ifaces)
+
+        drops_out = 0
+
+        util = max(iface.util_pct for iface in ifaces)
+
+        queue = max(iface.queue_depth for iface in ifaces)
+
     else:
         total_bytes_in = 0.0
         total_bytes_out = 0.0
-        errors = drops_in = drops_out = 0.0
-        util = queue = 0.0
+        errors = 0.0
+        drops_in = 0.0
+        drops_out = 0.0
+        util = 0.0
+        queue = 0.0
 
     return [
-        total_bytes_in, total_bytes_out,
-        0, 0,   # packets (derived, not critical for GAT)
-        errors, drops_in, drops_out,
+        total_bytes_in,
+        total_bytes_out,
+        0,
+        0,
+        errors,
+        drops_in,
+        drops_out,
         util,
-        float(s.bgp_active), s.bgp_prefixes,
-        s.bgp_updates, s.bgp_withdrawals, s.ospf_spf,
-        float(s.ldp_active), float(s.lsp_count),
-        float(s.label_table_size), float(s.vpn_routes),
-        s.cpu, s.memory, queue,
+        float(s.bgp_sessions_active),
+        s.bgp_prefixes_received,
+        s.bgp_updates_per_min,
+        s.bgp_withdrawals_per_min,
+        s.ospf_spf_runs,
+        float(s.ldp_sessions_active),
+        float(s.mpls_lsp_count),
+        float(s.mpls_label_table_size),
+        float(s.vpn_routes_count),
+        s.cpu_load_pct,
+        s.memory_used_pct,
+        queue,
     ]
-
 
 # ---------------------------------------------------------------------------
 # Main
