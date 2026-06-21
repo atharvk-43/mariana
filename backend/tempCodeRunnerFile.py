@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 
-df = pd.read_csv("backend/telemetry.csv")
+df = pd.read_csv("telemetry.csv")
 
 features = df[
     [
@@ -27,7 +27,7 @@ predictions = model.fit_predict(features)
 df["anomaly"] = predictions
 
 df.to_csv(
-    "backend/telemetry.csv",
+    "telemetry.csv",
     index=False
 )
 
