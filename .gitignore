@@ -1,3 +1,30 @@
-venv/
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# OS / IDE metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Large Datasets
+data/
+backend/live_telemetry.csv
+live_telemetry.csv
+
+# Saved Model Artifacts
+src/models/
+backend/models/
+*.pt
+*.pkl

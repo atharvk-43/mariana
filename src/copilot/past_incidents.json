@@ -1,0 +1,86 @@
+[
+  {
+    "incident_id": "INC-2026-001",
+    "timestamp": "2026-01-15T08:23:00Z",
+    "fault_type": "congestion",
+    "node": "CE-B1",
+    "severity": "P2",
+    "symptoms": {
+      "utilization_pct": 94.2,
+      "queue_depth": 145,
+      "packet_loss_pct": 4.7,
+      "latency_ms": 187.3
+    },
+    "root_cause": "Bandwidth saturation on CE-B1 wan0 (100 Mbps link at 94% utilization during peak hours)",
+    "resolution": "Applied QoS policy to prioritize critical traffic, shaped non-critical flows. Scheduled link upgrade to 200 Mbps.",
+    "duration_minutes": 42,
+    "runbook_used": "runbook_congestion.md"
+  },
+  {
+    "incident_id": "INC-2026-002",
+    "timestamp": "2026-02-03T14:12:00Z",
+    "fault_type": "bgp_flap",
+    "node": "PE-1",
+    "severity": "P1",
+    "symptoms": {
+      "bgp_sessions_active": 1,
+      "bgp_updates_per_min": 287,
+      "bgp_withdrawals_per_min": 142,
+      "bgp_prefixes_received": 18
+    },
+    "root_cause": "BGP session to upstream provider dropped due to hold timer expiry; route flap damping triggered",
+    "resolution": "Reset BGP session with soft refresh. Increased hold timer from 120s to 180s. Verified with provider no ACL blocking port 179.",
+    "duration_minutes": 18,
+    "runbook_used": "runbook_bgp_recovery.md"
+  },
+  {
+    "incident_id": "INC-2026-003",
+    "timestamp": "2026-02-20T22:45:00Z",
+    "fault_type": "mpls_failure",
+    "node": "P-1",
+    "severity": "P1",
+    "symptoms": {
+      "mpls_lsp_count": 1,
+      "tunnel_packet_loss_pct": 18.3,
+      "errors_in": 76,
+      "ospf_spf_runs": 28
+    },
+    "root_cause": "Optical interface degradation on P-1 eth2 (core backbone link to P-2). CRC errors caused LDP session flapping.",
+    "resolution": "Traffic re-routed via P-1 eth3 (backup path). SFP replaced on P-1 eth2. LDP sessions re-established.",
+    "duration_minutes": 35,
+    "runbook_used": "runbook_mpls_tunnel.md"
+  },
+  {
+    "incident_id": "INC-2026-004",
+    "timestamp": "2026-03-10T11:30:00Z",
+    "fault_type": "policy_drift",
+    "node": "PE-2",
+    "severity": "P2",
+    "symptoms": {
+      "vpn_routes_count": 894,
+      "cpu_load_pct": 91,
+      "memory_used_pct": 87,
+      "bgp_updates_per_min": 94
+    },
+    "root_cause": "Incorrect route-target import statement on PE-2 VRF 'CUSTOMER-A' caused route leak from production VRF",
+    "resolution": "Corrected RT import under VRF. Withdrawn leaked prefixes using 'withdraw route' command. Committed config with 'commit confirmed'.",
+    "duration_minutes": 24,
+    "runbook_used": "runbook_policy_drift.md"
+  },
+  {
+    "incident_id": "INC-2026-005",
+    "timestamp": "2026-03-28T16:55:00Z",
+    "fault_type": "congestion",
+    "node": "P-1",
+    "severity": "P3",
+    "symptoms": {
+      "utilization_pct": 78.3,
+      "queue_depth": 55,
+      "jitter_ms": 4.2
+    },
+    "root_cause": "Traffic engineering reroute placed additional LSPs through P-1 after P-2 maintenance",
+    "resolution": "Identified maintenance window overlap. Returned P-2 to service. LSPs redistributed.",
+    "duration_minutes": 15,
+    "runbook_used": "runbook_congestion.md"
+  }
+]
