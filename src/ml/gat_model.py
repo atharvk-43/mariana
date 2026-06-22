@@ -84,6 +84,7 @@ class GATAnomalyDetector:
     def save(self, path: str) -> None:
         torch.save({
             "model_state": self.model.state_dict(),
+            "model_params": {"n_features": self.model.encoder.conv1.in_channels, "latent_dim": self.model.encoder.conv3.out_channels},
             "scaler": self.scaler,
             "edge_index": self.edge_index,
             "threshold": self.threshold,
@@ -91,7 +92,11 @@ class GATAnomalyDetector:
 
     def load(self, path: str) -> None:
         checkpoint = torch.load(path, map_location=self.device)
-        self.model = GATAutoencoder().to(self.device)
+        params = checkpoint.get("model_params", {})
+        self.model = GATAutoencoder(
+            n_features=params.get("n_features", 20),
+            latent_dim=params.get("latent_dim", 32),
+        ).to(self.device)
         self.model.load_state_dict(checkpoint["model_state"])
         self.scaler = checkpoint.get("scaler")
         self.edge_index = checkpoint.get("edge_index")

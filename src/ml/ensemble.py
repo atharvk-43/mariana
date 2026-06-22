@@ -8,7 +8,6 @@ from ml.prophet_model import ProphetForecaster
 from ml.gat_model import GATAnomalyDetector
 
 HEALTH_THRESHOLDS = {
-    "risk_score": [(0.35, "NORMAL"), (0.65, "WARNING")],
     "latency_ms": [(50.0, "WARNING"), (150.0, "CRITICAL")],
     "packet_loss_pct": [(1.0, "WARNING"), (5.0, "CRITICAL")],
     "utilization_pct": [(75.0, "WARNING"), (90.0, "CRITICAL")],
@@ -53,19 +52,31 @@ class EnsembleDetector:
         node_id = current_row["node_id"]
         history = self.history.get(node_id, pd.DataFrame([current_row]))
 
-        if_result = self.if_detector.score(current_row)
+        try:
+            if_result = self.if_detector.score(current_row)
+        except Exception:
+            if_result = {"if_score": 0.0, "is_anomaly": False}
 
         lstm_result = {"lstm_score": 0.0, "reconstruction_error": 0.0, "is_anomaly": False}
         if len(history) >= 60:
-            seq = get_sequence_for_lstm(history, node_id)
-            lstm_result = self.lstm_detector.score(seq)
+            try:
+                seq = get_sequence_for_lstm(history, node_id)
+                lstm_result = self.lstm_detector.score(seq)
+            except Exception:
+                pass
 
-        prophet_result = self.prophet_forecaster.get_overall_score(node_id, current_row)
+        try:
+            prophet_result = self.prophet_forecaster.get_overall_score(node_id, current_row)
+        except Exception:
+            prophet_result = {"prophet_score": 0.0, "per_metric_scores": {}, "earliest_breach_hours": None, "breach_metric": None}
 
         gat_result = {"per_node_scores": {}, "per_node_anomaly": {}, "network_score": 0.0}
         if all_node_latest:
-            gf = get_graph_features(all_node_latest)
-            gat_result = self.gat_detector.score(gf)
+            try:
+                gf = get_graph_features(all_node_latest)
+                gat_result = self.gat_detector.score(gf)
+            except Exception:
+                pass
 
         risk_score = (
             ENSEMBLE_WEIGHTS["isolation_forest"] * if_result["if_score"]

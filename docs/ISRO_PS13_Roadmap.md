@@ -34,13 +34,17 @@ An autonomous, **offline AI NOC Copilot** that:
 
 | Layer | Status | Gap |
 |---|---|---|
-| Network Simulation | ❌ Blueprint only | Containerlab/FRR not running |
-| Telemetry Schema | ⚠️ Wrong domain | Using spacecraft fields, not network fields |
-| ML Models | ⚠️ Skeleton | Isolation Forest script, not wired to API |
-| **Offline LLM Copilot** | ❌ Doesn't exist | 35% of score, zero progress |
-| **RAG Pipeline** | ❌ Doesn't exist | Required for grounded LLM responses |
-| **Air-Gap Compliance** | ❌ Not considered | 20% of score |
-| Frontend Dashboard | ❌ MVP stub | 2 numbers, no charts, no topology viz |
+| Network Simulation | ✅ Complete | 10-node topology, 92-col telemetry, 4 fault types |
+| Telemetry Schema | ✅ Complete | 23 NUMERIC_COLS aggregates + per-interface fields |
+| ML Models — GAT | ✅ Trained (0.941 AUROC) | Downloaded to `src/models/` |
+| ML Models — IF | ✅ Trained (0.898 AUROC) | Full HPO + final training done |
+| ML Models — LSTM AE | ⚠️ Trained (0.664 AUROC) | Re-submitted with 200 epochs |
+| ML Models — Prophet | ✅ Trained (30 models) | Downloaded with manifest.json |
+| **Ensemble Wiring** | ❌ Not wired | Model files exist, fusion layer pending |
+| **Offline LLM Copilot** | ⚠️ Skeleton | Ollama client + RAG pipeline exist, not integrated with real scores |
+| **RAG Pipeline** | ⚠️ Exists | 6 runbooks + past incidents, not wired to ensemble |
+| **Air-Gap Compliance** | ❌ Not verified | System currently uses internet-dependent packages |
+| Frontend Dashboard | ❌ Empty | `src/frontend/` directory exists but no code |
 
 ---
 
@@ -207,13 +211,13 @@ src/                              # PS-13 NOC Copilot (our team)
 │
 ├── training/
 │   ├── generate_dataset.py      # Run locally: produce telemetry_train.csv
-│   ├── train_lstm_kaggle.ipynb  # Kaggle GPU notebook: train → lstm_ae.pt
-│   └── train_gat_kaggle.ipynb   # Kaggle GPU notebook: train → gat.pt
+│   ├── train_if.py              # Local IF training script
+│   └── train_prophet.py         # Local Prophet training script
 │
 ├── copilot/
 │   ├── ollama_client.py         # Wrapper around local Ollama API
 │   ├── rag_pipeline.py          # ChromaDB + LangChain RAG chain
-│   ├── runbooks/                # 5–6 markdown runbooks (BGP, congestion, etc.)
+│   ├── runbooks/                # 6 markdown runbooks (BGP, congestion, MPLS, etc.)
 │   └── past_incidents.json      # Simulated incident history for RAG context
 │
 ├── api/
@@ -221,12 +225,23 @@ src/                              # PS-13 NOC Copilot (our team)
 │   └── schemas.py               # Pydantic models for all responses
 │
 ├── models/
-│   ├── lstm_ae.pt               # Downloaded from Kaggle after training
-│   ├── gat.pt                   # Downloaded from Kaggle after training
-│   ├── isolation_forest.pkl     # Fit locally
-│   └── prophet/                 # 31 .pkl files (targeted: only lead metrics per fault type)
+│   ├── lstm_ae.pt               # Downloaded from Kaggle (pending re-submit)
+│   ├── lstm_scaler.pkl          # Downloaded from Kaggle
+│   ├── gat.pt                   # Downloaded from Kaggle
+│   ├── gat_scaler.pkl           # Downloaded from Kaggle
+│   ├── isolation_forest.pkl     # Trained locally on 300K rows
+│   ├── if_scaler.pkl            # Trained locally
+│   └── prophet/                 # 30 .pkl files (10 nodes × 3 lead metrics) + manifest.json
+│
+├── frontend/                    # Empty — pending implementation
 │
 └── smoke_test.py                # V2: tests per-interface + per-tunnel telemetry
+
+nbs/                              # Kaggle training notebooks
+├── train_lstm_ae_kaggle.ipynb   # LSTM AE on T4×2 (25 trials HPO, 200 epochs)
+├── train_gat_kaggle.ipynb       # GAT AE on P100 (25 trials HPO, 150 epochs)
+├── train_if_kaggle.ipynb        # IF on CPU (15 trials HPO, 70 features)
+└── train_prophet_kaggle.ipynb   # Prophet on CPU (5 combos grid search, 30 models)
 ```
 
 ---
@@ -259,38 +274,42 @@ PS explicitly lists test scenarios. Build and rehearse these:
 
 ---
 
-## Prioritized Execution Order
+## Execution Status
 
-### Block 1 — Foundation (Do First, Everything Depends on This)
-1. Lock the telemetry schema (23 fields above — done)
-2. Build `topology.py` — define the 10-node network graph
-3. Build `network_gen.py` — realistic correlated synthetic telemetry
-4. Build `anomaly_injector.py` — 4 fault scenarios with precursor phases
-5. Run `generate_dataset.py` — produce 7-day training dataset
+### Block 1 — Foundation ✅ Complete
+- [x] Lock telemetry schema (23 NUMERIC_COLS + per-interface)
+- [x] Build `topology.py` — 10-node network graph
+- [x] Build `network_gen.py` — correlated synthetic telemetry (92 cols)
+- [x] Build `anomaly_injector.py` — 4 fault scenarios (congestion, bgp_flap, mpls_failure, link_flap)
+- [x] Generate `telemetry_train.csv` + `telemetry_val.csv` + `graph_snapshots.pkl`
 
-### Block 2 — ML (Parallel with Block 1 data generation)
-6. `isolation_forest.py` — refactor existing code into callable class
-7. `prophet_model.py` — fit per-metric, expose forecast + time-to-breach
-8. Train LSTM AE on Kaggle → `lstm_ae.pt`
-9. Train GAT on Kaggle → `gat.pt`
-10. `ensemble.py` — fuse all scores
+### Block 2 — ML ⏳ Model training complete, ensemble pending
+- [x] `features.py` — rolling windows (30s/5min/1hr), slope features
+- [x] `isolation_forest.py` — callable class, trained (0.898 AUROC)
+- [x] `prophet_model.py` — 30 models trained (10 nodes × 3 lead metrics)
+- [x] `lstm_ae.py` — trained on Kaggle T4×2 (0.664 AUROC, re-submitted with 200 ep)
+- [x] `gat_model.py` — trained on Kaggle P100 (0.941 AUROC)
+- [ ] `ensemble.py` — fuse all 4 scores (pending)
 
-### Block 3 — LLM Copilot (High Priority, 35% of score)
-11. Install Ollama on EC2, pull Phi-3-mini
-12. Write 5–6 runbook markdown files
-13. Build `rag_pipeline.py` — ChromaDB + LangChain
-14. Build `ollama_client.py` + `/copilot/query` endpoint
-15. Test: inject fault → copilot gives structured response
+### Block 3 — LLM Copilot ⚠️ Code exists, real integration pending
+- [x] `ollama_client.py` — HTTP wrapper for local Ollama
+- [x] `rag_pipeline.py` — ChromaDB RAG with keyword fallback
+- [x] `runbooks/` — 6 markdown runbooks
+- [x] `past_incidents.json` — 5 realistic incident records
+- [ ] Wire ensemble scores → `AlertContext` → copilot queries
+- [ ] Confirm Ollama + Phi-3-mini work offline
 
-### Block 4 — API + Frontend
-16. `api/main.py` — all endpoints + WebSocket
-17. Frontend: topology viz + timeseries charts + alert feed + copilot panel
-18. Wire everything end-to-end
+### Block 4 — API + Frontend ⚠️ API scaffolded, frontend empty
+- [x] `api/main.py` — FastAPI with 9 endpoints + WebSocket (needs rewiring per `spec_api.md`)
+- [x] `api/schemas.py` — Pydantic models (missing `AlertContext`)
+- [ ] `src/frontend/` — empty, dashboard pending
+- [ ] End-to-end wiring all components
 
-### Block 5 — Air-Gap + Demo Prep
-19. Verify zero outbound calls (disable EC2 internet, run demo)
-20. Rehearse all 4 fault scenarios
-21. Architecture diagram + README
+### Block 5 — Air-Gap + Demo Prep ❌ Not started
+- [ ] Verify zero outbound calls
+- [ ] Rehearse all 4 fault scenarios
+- [ ] Architecture diagram + README
+- [ ] `docs/training_results.md` — comprehensive model results
 
 ---
 

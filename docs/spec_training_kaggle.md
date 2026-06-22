@@ -1,5 +1,18 @@
 # Spec: Kaggle Training Notebooks
-## Files: `backend/training/train_lstm_kaggle.ipynb`, `backend/training/train_gat_kaggle.ipynb`
+## Files: `nbs/train_lstm_ae_kaggle.ipynb`, `nbs/train_gat_kaggle.ipynb`, `nbs/train_if_kaggle.ipynb`, `nbs/train_prophet_kaggle.ipynb`
+
+## Status: ✅ Implemented — spec is mostly superseded by actual notebooks
+
+> **Updates vs this spec:**
+> - 4 notebooks exist (not 2): LSTM AE, GAT, IF, Prophet
+> - File paths are `nbs/`, not `backend/training/`
+> - Actual notebooks include Optuna HPO, DataParallel, per-node evaluation, model+scaler download — none in this spec
+> - LSTM AE: actual uses N_FEATURES=21, HIDDEN_DIM=128, 3 enc/2 dec layers, DataParallel, Optuna trial for lr/hidden_dim/dropout, 100 epochs, checkpoints at best val_loss, Kaggle T4×2 GPU
+> - GAT AE: actual uses N_FEATURES=20, LATENT_DIM=16, 2 GAT layers (not 3), Optuna trial for lr/latent_dim/dropout, 50 epochs, 95th-pct threshold, Kaggle T4 GPU
+> - IF: not in original spec — added via Optuna HPO over 15 trials, 70 features (not 24), Kaggle CPU
+> - Prophet: not in original spec — grid search over changepoint_prior_scale (5 values), seasonality_prior_scale=10.0, 30 models, Kaggle CPU
+> - Kaggle dataset name: "MPLS Network Telemetry — PS-13 NOC Anomaly Detection"
+> - PyTorch 2.6 fix: verify blocks need `weights_only=False`
 
 ---
 

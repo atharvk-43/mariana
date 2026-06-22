@@ -1,5 +1,18 @@
 # Spec: ML Models
-## Files: `backend/ml/features.py`, `isolation_forest.py`, `lstm_ae.py`, `prophet_model.py`, `gat_model.py`, `ensemble.py`
+## Files: `src/ml/features.py`, `isolation_forest.py`, `lstm_ae.py`, `prophet_model.py`, `gat_model.py`, `ensemble.py`
+
+## Status: ⚠️ Target state — diverges from current implementation
+
+> **Divergence notes:**
+> - File paths use `backend/` — actual code is at `src/`
+> - Ensemble weights in this spec (IF=0.20, LSTM=0.30, Prophet=0.30, GAT=0.20) are from pre-training guesswork. Actual weights based on results: GAT=0.35, IF=0.30, LSTM=0.20, Prophet=0.15 (see `docs/training_results.md`)
+> - N_FEATURES=23 in this spec (LSTM) but actual training uses N_FEATURES=21 (kaggle notebook adjusted for available features). Same for GAT — N_FEATURES=20 in spec, notebook uses 20 but column selection differs
+> - PROPHET_METRICS list uses old node names (PE-1/2, P-1/2/3, CE-B1/B2/B3) — actual training uses P-3, CE-B1/B2/B3, PE-1/2
+> - Prophet spec says 31 models — actual count is 30 (global model removed)
+> - `get_feature_vector_for_if()` returns 24-element (23 NUMERIC_COLS + link_state) per spec — actual IF uses 70 features with engineered columns
+> - Inference classes (LSTMAnomalyDetector, GATAnomalyDetector) use different save-file keys than actual Kaggle checkpoints
+> - `prophet_model.py` code was refactored in notebook to use grid-search HPO — spec shows single hyperparams
+> - `isolation_forest.py` expects local training — actual best model trained via Kaggle+Optuna HPO
 
 ---
 

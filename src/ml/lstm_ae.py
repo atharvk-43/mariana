@@ -74,13 +74,19 @@ class LSTMAnomalyDetector:
     def save(self, path: str) -> None:
         torch.save({
             "model_state": self.model.state_dict(),
+            "model_params": {"n_features": self.model.encoder.lstm.input_size, "hidden_dim": self.model.encoder.lstm.hidden_size, "seq_len": self.model.decoder.seq_len},
             "scaler": self.scaler,
             "threshold": self.threshold,
         }, path)
 
     def load(self, path: str) -> None:
         checkpoint = torch.load(path, map_location=self.device)
-        self.model = LSTMAutoencoder().to(self.device)
+        params = checkpoint.get("model_params", {})
+        self.model = LSTMAutoencoder(
+            n_features=params.get("n_features", 23),
+            hidden_dim=params.get("hidden_dim", 256),
+            seq_len=params.get("seq_len", 60),
+        ).to(self.device)
         self.model.load_state_dict(checkpoint["model_state"])
         self.scaler = checkpoint.get("scaler")
         self.threshold = checkpoint.get("threshold", 0.0)

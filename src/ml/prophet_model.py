@@ -1,14 +1,18 @@
 import os
 import json
+import logging
 import numpy as np
 import pandas as pd
 from datetime import timedelta
 import joblib
+from joblib import Parallel, delayed
 
 try:
     from prophet import Prophet
 except ImportError:
     Prophet = None
+
+log = logging.getLogger(__name__)
 
 PROPHET_METRICS = [
     ("CE-B1", "utilization_pct", 90.0), ("CE-B1", "queue_depth", 100.0),
@@ -34,25 +38,45 @@ class ProphetForecaster:
         self.models: dict[tuple, Prophet] = {}
         self.means: dict[tuple, float] = {}
 
-    def fit_all(self, df: pd.DataFrame, parallel: bool = True) -> None:
+    def fit_all(self, df: pd.DataFrame, parallel: bool = True, n_jobs: int = -1) -> None:
         if Prophet is None:
             raise ImportError("prophet package is required to fit models. Install with: pip install prophet")
+        if parallel:
+            self._fit_parallel(df, n_jobs)
+        else:
+            self._fit_sequential(df)
+
+    def _fit_sequential(self, df: pd.DataFrame) -> None:
         for node_id, metric, threshold in PROPHET_METRICS:
-            node_df = df[df["node_id"] == node_id][["timestamp", metric]].copy()
-            node_df = node_df.rename(columns={"timestamp": "ds", metric: "y"})
-            node_df["ds"] = pd.to_datetime(node_df["ds"])
-            if len(node_df) < 10:
-                continue
-            self.means[(node_id, metric)] = float(node_df["y"].mean())
-            model = Prophet(
-                seasonality_mode="multiplicative",
-                daily_seasonality=True,
-                weekly_seasonality=False,
-                changepoint_prior_scale=0.05,
-            )
-            model.add_seasonality(name="diurnal", period=1, fourier_order=5)
-            model.fit(node_df)
-            self.models[(node_id, metric)] = model
+            self._fit_one(df, node_id, metric)
+
+    def _fit_parallel(self, df: pd.DataFrame, n_jobs: int = -1) -> None:
+        results = Parallel(n_jobs=n_jobs, verbose=10)(
+            delayed(self._fit_one)(df, node_id, metric)
+            for node_id, metric, _ in PROPHET_METRICS
+        )
+        for model, mean_val, key in results:
+            if model is not None:
+                self.models[key] = model
+                self.means[key] = mean_val
+
+    def _fit_one(self, df: pd.DataFrame, node_id: str, metric: str) -> tuple:
+        key = (node_id, metric)
+        node_df = df[df["node_id"] == node_id][["timestamp", metric]].copy()
+        node_df = node_df.rename(columns={"timestamp": "ds", metric: "y"})
+        node_df["ds"] = pd.to_datetime(node_df["ds"])
+        if len(node_df) < 10:
+            return None, None, key
+        mean_val = float(node_df["y"].mean())
+        model = Prophet(
+            seasonality_mode="multiplicative",
+            daily_seasonality=False,
+            weekly_seasonality=False,
+            changepoint_prior_scale=0.05,
+        )
+        model.add_seasonality(name="diurnal", period=1, fourier_order=10)
+        model.fit(node_df)
+        return model, mean_val, key
 
     def forecast(
         self, node_id: str, metric: str, horizon_hours: list[float] = None
@@ -71,13 +95,13 @@ class ProphetForecaster:
         for h in horizon_hours:
             idx = min(int(h * 60), len(forecast) - 1)
             row = forecast.iloc[idx]
-            horizon[f"{h:.0f}h"] = {
+            horizon[f"{h:g}h"] = {
                 "yhat": float(row["yhat"]),
                 "yhat_lower": float(row["yhat_lower"]),
                 "yhat_upper": float(row["yhat_upper"]),
             }
         threshold = THRESHOLDS.get(metric, float("inf"))
-        ttb = self._estimate_time_to_breach(forecast, threshold)
+        ttb = self._estimate_time_to_breach(forecast, threshold, periods)
         return {
             "metric": metric,
             "node_id": node_id,
@@ -86,12 +110,14 @@ class ProphetForecaster:
             "breach_threshold": threshold,
         }
 
-    def _estimate_time_to_breach(self, forecast: pd.DataFrame, threshold: float) -> float | None:
+    def _estimate_time_to_breach(self, forecast: pd.DataFrame, threshold: float, periods: int) -> float | None:
         latest = forecast[forecast["yhat"] >= threshold]
         if latest.empty:
             return None
-        first = latest.iloc[0]
-        delta = first["ds"] - forecast.iloc[0]["ds"]
+        first_breach = latest.iloc[0]
+        last_hist_idx = max(0, len(forecast) - periods - 1)
+        ref_ds = forecast.iloc[last_hist_idx]["ds"]
+        delta = first_breach["ds"] - ref_ds
         return max(0.0, delta.total_seconds() / 3600.0)
 
     def anomaly_score(self, node_id: str, metric: str, actual_value: float) -> float:
@@ -112,11 +138,16 @@ class ProphetForecaster:
         scores = {}
         earliest_breach = None
         breach_metric = None
-        for nid, metric, _ in PROPHET_METRICS:
+        for nid, metric, threshold in PROPHET_METRICS:
             if nid != node_id:
                 continue
             val = float(current_row.get(metric, 0.0))
             scores[metric] = self.anomaly_score(node_id, metric, val)
+            fc = self.forecast(node_id, metric)
+            ttb = fc.get("time_to_breach_hours")
+            if ttb is not None and (earliest_breach is None or ttb < earliest_breach):
+                earliest_breach = ttb
+                breach_metric = metric
         prophet_score = max(scores.values()) if scores else 0.0
         return {
             "prophet_score": prophet_score,

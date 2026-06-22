@@ -1,5 +1,17 @@
 # Spec: Offline LLM NOC Copilot
-## Files: `backend/copilot/ollama_client.py`, `rag_pipeline.py`, `runbooks/`, `past_incidents.json`
+## Files: `src/copilot/ollama_client.py`, `rag_pipeline.py`, `runbooks/`, `past_incidents.json`
+
+## Status: ⚠️ Target state — divergence from current implementation
+
+> **Divergence notes:**
+> - File paths use `backend/` — actual code is at `src/`
+> - Actual files exist: `src/copilot/ollama_client.py`, `src/copilot/rag_pipeline.py`, `src/copilot/runbooks/` (6 md), `src/copilot/past_incidents.json` (5 records)
+> - Current `src/copilot/rag_pipeline.py` implements `RAGPipeline` class, NOT the `NOCCopilot` class shown below. Private methods `_build_query_string`, `_build_prompt` are missing
+> - `RAGPipeline.query()` takes `(message, history)` — does not accept `alert_context` dict. Needs refactor per this spec
+> - `src/api/schemas.py` missing `AlertContext`, `CopilotQueryRequest`, `CopilotResponse` Pydantic models
+> - `src/api/main.py` copilot endpoints exist but don't pull real model scores — return mock/placeholder data
+> - ChromaDB index is not yet built (no `chroma_db/` on disk)
+> - Air-gap compliance steps not yet demonstrated
 
 ---
 

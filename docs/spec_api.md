@@ -1,5 +1,13 @@
 # Spec: FastAPI Backend
-## Files: `backend/api/main.py`, `backend/api/schemas.py`
+## Files: `src/api/main.py`, `src/api/schemas.py`
+## Status: ⚠️ Target state — diverges from current implementation
+
+> **Divergence notes:**
+> - File paths in spec use `backend/` — actual code is at `src/`
+> - `src/api/main.py` has 9 endpoints + WebSocket but uses synchronous `AppState` tick, not the background-threaded `telemetry_loop` with `threading.Lock()` shown below
+> - `src/api/schemas.py` is missing `AlertContext` Pydantic model
+> - Copilot endpoints exist but aren't wired to real model scores
+> - See `docs/training_results.md` for actual model performance
 
 ---
 
