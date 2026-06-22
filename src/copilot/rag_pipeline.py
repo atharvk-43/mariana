@@ -145,7 +145,7 @@ class RAGPipeline:
     def copilot_query(self, node_id: str, alert: str, question: str) -> dict:
         context = self.retrieve(f"{alert} {question} {node_id}", n_results=3)
 
-        from copilot.ollama_client import OllamaClient
+        from .ollama_client import OllamaClient
         ollama = OllamaClient()
         if ollama.is_available():
             result = ollama.structured_query(context, question)

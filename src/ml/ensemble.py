@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from ml.features import get_feature_vector_for_if, get_sequence_for_lstm, get_graph_features
-from ml.isolation_forest import IsolationForestDetector
-from ml.lstm_ae import LSTMAnomalyDetector
-from ml.prophet_model import ProphetForecaster
-from ml.gat_model import GATAnomalyDetector
+from .features import get_feature_vector_for_if, get_sequence_for_lstm, get_graph_features
+from .isolation_forest import IsolationForestDetector
+from .lstm_ae import LSTMAnomalyDetector
+from .prophet_model import ProphetForecaster
+from .gat_model import GATAnomalyDetector
 
 HEALTH_THRESHOLDS = {
     "latency_ms": [(50.0, "WARNING"), (150.0, "CRITICAL")],

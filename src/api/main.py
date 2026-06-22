@@ -8,17 +8,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from data.topology import NODE_IDS, get_graph_as_dict
-from data.network_gen import NetworkTelemetryGenerator, NUMERIC_COLS, TELEMETRY_SCHEMA
-from data.anomaly_injector import AnomalyInjector, FAULT_TYPES
-from ml.ensemble import EnsembleDetector
-from ml.isolation_forest import IsolationForestDetector
-from ml.lstm_ae import LSTMAnomalyDetector
-from ml.prophet_model import ProphetForecaster
-from ml.gat_model import GATAnomalyDetector
+from ..data.topology import NODE_IDS, get_graph_as_dict
+from ..data.network_gen import NetworkTelemetryGenerator, NUMERIC_COLS, TELEMETRY_SCHEMA
+from ..data.anomaly_injector import AnomalyInjector, FAULT_TYPES
+from ..ml.ensemble import EnsembleDetector
+from ..ml.isolation_forest import IsolationForestDetector
+from ..ml.lstm_ae import LSTMAnomalyDetector
+from ..ml.prophet_model import ProphetForecaster
+from ..ml.gat_model import GATAnomalyDetector
 
-from copilot.rag_pipeline import RAGPipeline
-from api.schemas import *
+from ..copilot.rag_pipeline import RAGPipeline
+from .schemas import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("api")

@@ -7,9 +7,7 @@ from sklearn.ensemble import IsolationForest
 from tqdm import tqdm
 import joblib
 
-from ml.features import get_feature_matrix_for_if, get_feature_vector_for_if, normalize_features
-
-log = logging.getLogger(__name__)
+from .features import get_feature_vector_for_if, normalize_features
 
 
 class IsolationForestDetector:
