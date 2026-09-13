@@ -17,8 +17,10 @@ jobs:
       - name: Get repository
         uses: actions/checkout@v4
 
-      - name: Fetch latest changes
-        run: git fetch origin main
+      - name: Sync with remote
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: Make daily update
         run: |
@@ -33,5 +35,4 @@ jobs:
 
           git diff --cached --quiet || git commit -m "chore: daily project update"
 
-          git pull --rebase origin main
           git push
