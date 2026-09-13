@@ -3,7 +3,6 @@ name: Daily Project Update
 on:
   schedule:
     - cron: "30 17 * * *"
-
   workflow_dispatch:
 
 permissions:
@@ -23,8 +22,8 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "atharvk-43"
+          git config user.email "194505536+atharvk-43@users.noreply.github.com"
 
           git add DAILY_STATUS.md
 
