@@ -24,7 +24,7 @@ jobs:
       - name: Commit changes
         run: |
           git config user.name "atharvk-43"
-          git config user.email "194505536+atharvk-43@users.noreply.github.com"
+          git config user.email "atharvkrishna24@gmail.com"
 
           git add DAILY_STATUS.md
 
