@@ -17,6 +17,9 @@ jobs:
       - name: Get repository
         uses: actions/checkout@v4
 
+      - name: Fetch latest changes
+        run: git fetch origin main
+
       - name: Make daily update
         run: |
           echo "Last automated update: $(date -u)" > DAILY_STATUS.md
