@@ -16,11 +16,13 @@ jobs:
     steps:
       - name: Get repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Sync with remote
         run: |
           git fetch origin main
-          git reset --hard origin/main
+          git checkout -B main origin/main
 
       - name: Make daily update
         run: |
@@ -35,4 +37,4 @@ jobs:
 
           git diff --cached --quiet || git commit -m "chore: daily project update"
 
-          git push
+          git push origin main
